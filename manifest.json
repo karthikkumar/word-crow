@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "word crow",
-  "description": "word crow, collect words from web pages",
+  "name": "Word Crow",
+  "description": "Word Crow, collect words from web pages",
   "version": "1.0",
   "icons": {
     "16": "images/icon-16.png",
@@ -9,7 +9,25 @@
     "48": "images/icon-48.png",
     "128": "images/icon-128.png"
   },
+  "permissions": ["contextMenus", "identity"],
+  "host_permissions": ["*://*/*"],
+  "oauth2": {
+    "client_id": "746031622480-rj65ndu3bjlsg1prgh9ta94ghi3qjdaq.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon-16.png",
+      "32": "images/icon-32.png",
+      "48": "images/icon-48.png",
+      "128": "images/icon-128.png"
+    }
   }
 }

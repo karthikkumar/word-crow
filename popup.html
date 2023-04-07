@@ -5,15 +5,34 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./popup.css" />
+    <title>Word Crow</title>
   </head>
   <body>
-    <h1>collected words</h1>
-    <ul>
-      <li>
-        <h2 class="word">word</h2>
-        <p class="pathname">meaning</p>
-      </li>
-    </ul>
+    <div id="spinner">
+      <div id="spinnerContainer">
+        <div class="spinner"></div>
+        <div class="spinnerText">caw, caw,...</div>
+      </div>
+    </div>
+    <div id="unauthenticated">
+      <div id="signIn">
+        <p id="welcome">Welcome 👋</p>
+        <p>
+          Word Crow stores collected words in a Google Sheet so you own the
+          data. Please sign in with Google to use this extension.
+        </p>
+        <button id="signInButton">Sign In with Google</button>
+      </div>
+    </div>
+    <div id="authenticated">
+      <h1>Collected Words</h1>
+      <ul>
+        <li>
+          <h2 class="word">word</h2>
+          <p class="pathname">meaning</p>
+        </li>
+      </ul>
+    </div>
 
     <script src="./popup.js" type="module"></script>
   </body>
