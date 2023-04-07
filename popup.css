@@ -2,6 +2,7 @@ body {
   width: 25rem;
   max-height: 100rem;
   font-family: Arial, sans-serif;
+  background-color: rgb(240, 240, 240);
 }
 
 #spinnerContainer {
@@ -71,12 +72,43 @@ body {
 }
 
 #unauthenticated,
-#authenticated {
+#authenticated,
+#wordListContainer {
   display: none;
 }
 
-h1 {
-  padding: 0.5rem 1rem;
+#wordListContainer {
+  height: max-content;
+  margin: 0 0.5rem 1rem 0.5rem;
+  background-color: #fff;
+  border-radius: 0.6rem;
+}
+
+#wordList {
+  padding: 0.5rem;
+}
+
+#wordActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  visibility: hidden;
+}
+
+.wordText:hover > #wordActions {
+  visibility: visible;
+}
+
+h2 {
+  margin: 0.6rem;
+}
+
+h3 {
+  margin: 0.6rem;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 li {
@@ -88,4 +120,18 @@ li > p {
   margin: 0;
   padding: 0.5rem 1rem;
   color: grey;
+  font-size: 1rem;
+}
+
+#loadingWords {
+  font-size: 1rem;
+  color: #666666;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 1rem 1rem 0.5rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 0.6rem;
 }

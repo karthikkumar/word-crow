@@ -1,6 +1,7 @@
 // const SPREADSHEET_ID = "1s7yof0W_O0d5Hec6EoNxvu8MrscrjNaXVdX67eNOwXw";
 const FILE_NAME = "Word Crow";
 const SHEET_NAME = "List";
+const TOP_10_RANGE = "A1:A10";
 const CONTEXT_MENU_ID = "collectWord";
 
 chrome.contextMenus.create({
@@ -10,10 +11,8 @@ chrome.contextMenus.create({
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log({ request, sender });
   if (request.action === "signIn") {
     chrome.identity.getAuthToken({ interactive: true }, (token) => {
-      console.log("Successfully signed in : ", { token });
       if (chrome.runtime.lastError || !token) {
         console.error(chrome.runtime.lastError);
         sendResponse({ signedIn: false });
@@ -25,7 +24,57 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // This line is necessary to use sendResponse asynchronously
     return true;
   }
+
+  if (request.action === "fetchRecentWords") {
+    fetchRecentWordsFromSheet().then((words) => {
+      sendResponse({ words });
+    });
+
+    // This line is necessary to use sendResponse asynchronously
+    return true;
+  }
 });
+
+async function fetchData(spreadsheetId, sheetName, range, accessToken) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?access_token=${accessToken}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data?.values?.length > 0 ? data.values.flat() : [];
+}
+
+async function findSpreadsheetIdByName(fileName, accessToken) {
+  const query = `mimeType='application/vnd.google-apps.spreadsheet' and trashed = false and name='${fileName}'`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+    query
+  )}&fields=files(id,name)&access_token=${accessToken}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  return data?.files?.length > 0 ? data.files[0].id : null;
+}
+
+async function fetchRecentWordsFromSheet() {
+  const accessToken = await chrome.identity
+    .getAuthToken({ interactive: true })
+    .then(({ token }) => token)
+    .catch((error) => {
+      console.error("Error fetching access token: ", error);
+    });
+
+  if (accessToken) {
+    const spreadsheetId = await findSpreadsheetIdByName(FILE_NAME, accessToken);
+    if (spreadsheetId) {
+      const words = await fetchData(
+        spreadsheetId,
+        SHEET_NAME,
+        TOP_10_RANGE,
+        accessToken
+      );
+      return words;
+    }
+  }
+}
 
 function findOrCreateSheet(callback) {
   chrome.identity.getAuthToken({ interactive: true }, (token) => {

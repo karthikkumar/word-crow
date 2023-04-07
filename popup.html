@@ -8,6 +8,15 @@
     <title>Word Crow</title>
   </head>
   <body>
+    <template id="wordTemplate">
+      <li class="wordText">
+        <h3 class="word">word</h3>
+        <p class="meaning">meaning</p>
+        <div id="wordActions">
+          <button class="deleteWord">Delete</button>
+        </div>
+      </li>
+    </template>
     <div id="spinner">
       <div id="spinnerContainer">
         <div class="spinner"></div>
@@ -25,13 +34,11 @@
       </div>
     </div>
     <div id="authenticated">
-      <h1>Collected Words</h1>
-      <ul>
-        <li>
-          <h2 class="word">word</h2>
-          <p class="pathname">meaning</p>
-        </li>
-      </ul>
+      <h2>Collected Words</h2>
+      <div id="wordListContainer">
+        <ul id="wordList"></ul>
+      </div>
+      <div id="loadingWords">Loading...</div>
     </div>
 
     <script src="./popup.js" type="module"></script>
