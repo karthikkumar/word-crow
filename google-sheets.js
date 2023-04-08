@@ -88,91 +88,100 @@ async function fetchDataFromSheet(
   return data?.values?.length > 0 ? data.values : [];
 }
 
-// async function insertRow(sheetId, sheetName, accessToken) {
-//   const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`;
-//   const data = {
-//     requests: [
-//       {
-//         insertDimension: {
-//           range: {
-//             sheetId: sheetName,
-//             dimension: "ROWS",
-//             startIndex: 0,
-//             endIndex: 1,
-//           },
-//           inheritFromBefore: false,
-//         },
-//       },
-//     ],
-//   };
+async function findSheetId(spreadsheetId, sheetName, accessToken) {
+  const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?access_token=${accessToken}`;
+  return fetch(metadataUrl)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(
+          `Error fetching spreadsheet metadata: ${response.statusText}`
+        );
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const sheet = data.sheets.find(
+        (sheet) => sheet.properties.title === sheetName
+      );
+      if (sheet) {
+        return sheet.properties.sheetId;
+      } else {
+        throw new Error("Sheet not found");
+      }
+    })
+    .catch((error) => console.error("Error:", error));
+}
 
-//   const response = await fetch(sheetsApiUrl, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${accessToken}`,
-//     },
-//     body: JSON.stringify(data),
-//   });
+async function insertRow(spreadsheetId, sheetName, accessToken) {
+  const sheetId = await findSheetId(spreadsheetId, sheetName, accessToken);
+  const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+  const data = {
+    requests: [
+      {
+        insertDimension: {
+          range: {
+            sheetId,
+            dimension: "ROWS",
+            startIndex: 0,
+            endIndex: 1,
+          },
+          inheritFromBefore: false,
+        },
+      },
+    ],
+  };
 
-//   if (!response.ok) {
-//     throw new Error(
-//       `Error inserting row in Google Sheet: ${response.statusText}`
-//     );
-//   }
+  return fetch(sheetsApiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(
+        `Error inserting row in Google Sheet: ${response.statusText}`
+      );
+    }
+    return response.json();
+  });
+}
 
-//   return response.json();
-// }
+async function updateTopRow(spreadsheetId, sheetName, values, accessToken) {
+  const updateRange = `${sheetName}!A1:B1`;
+  const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${updateRange}?valueInputOption=RAW`;
 
-// async function updateTopRow(sheetId, range, values, accessToken) {
-//   const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=RAW`;
-//   const data = { values };
-
-//   const response = await fetch(sheetsApiUrl, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${accessToken}`,
-//     },
-//     body: JSON.stringify(data),
-//   });
-
-//   if (!response.ok) {
-//     throw new Error(
-//       `Error updating top row in Google Sheet: ${response.statusText}`
-//     );
-//   }
-
-//   return response.json();
-// }
+  return fetch(sheetsApiUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ values: [values] }),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(
+        `Error updating top row in Google Sheet: ${response.statusText}`
+      );
+    }
+    return response.json();
+  });
+}
 
 async function storeSelectedWordInSheet(fileName, sheetName, word, definition) {
   try {
     const accessToken = await getAccessToken();
     const spreadsheetId = await findOrCreateSheet(fileName, sheetName);
+    await insertRow(spreadsheetId, sheetName, accessToken);
+    await updateTopRow(
+      spreadsheetId,
+      sheetName,
+      [word, definition],
+      accessToken
+    );
 
-    const sheetsApi = "https://sheets.googleapis.com/v4/spreadsheets";
-    const range = encodeURIComponent(`${sheetName}!A:B`);
-    const url = `${sheetsApi}/${spreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&access_token=${accessToken}`;
-    const success = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify({
-        values: [[word, definition]],
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((response) => {
-      if (response.ok) {
-        return true;
-      } else {
-        throw new Error("Failed to store the selected word");
-      }
-    });
-
-    if (success) {
-      // TODO: display CAW on the extension icon
-    }
+    // TODO: display CAW on the extension icon
   } catch (error) {
     console.error("Error:", error);
     // TODO: display ERR on the extension icon
