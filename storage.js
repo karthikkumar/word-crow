@@ -11,4 +11,10 @@ function storeSelectedWordLocally(word, definition) {
   });
 }
 
-export { storeSelectedWordLocally };
+function storeFetchedWordsLocally(words) {
+  if (words.length > 10) {
+    chrome.storage.local.set({ words: [...words].splice(10) });
+  }
+}
+
+export { storeSelectedWordLocally, storeFetchedWordsLocally };

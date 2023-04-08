@@ -31,17 +31,17 @@ function showWords(words) {
   wordList.innerHTML = "";
 
   const template = document.getElementById("wordTemplate");
-  let word, meaning;
+  let word, definition;
   for (const item of words) {
     if (Array.isArray(item)) {
-      [word, meaning] = item;
+      [word, definition] = item;
     } else {
       word = item.word;
-      meaning = item.meaning;
+      definition = item.definition;
     }
     const listItem = template.content.firstElementChild.cloneNode(true);
     listItem.querySelector(".word").textContent = word;
-    listItem.querySelector(".meaning").textContent = meaning;
+    listItem.querySelector(".definition").textContent = definition;
     wordList.appendChild(listItem);
   }
 
@@ -60,13 +60,12 @@ function fetchRecentWords() {
     }
   });
 
-  chrome.runtime.sendMessage({ action: "fetchRecentWords" }, (response) => {
-    if (response?.words) {
-      showWords(response.words);
+  chrome.runtime.sendMessage({ action: "fetchRecentWords" }, (words) => {
+    if (words?.length > 0) {
+      showWords(words);
     } else {
       console.error("Failed to fetch recent words");
     }
-
     hideLoadingWords();
   });
 }

@@ -11,7 +11,7 @@
     <template id="wordTemplate">
       <li class="wordText">
         <h3 class="word"></h3>
-        <p class="meaning">meaning</p>
+        <p class="definition">definition</p>
         <div id="wordActions">
           <button class="deleteWord">Delete</button>
         </div>
@@ -35,10 +35,10 @@
     </div>
     <div id="authenticated">
       <h2>Collected Words</h2>
+      <div id="loadingWords">Loading...</div>
       <div id="wordListContainer">
         <ul id="wordList"></ul>
       </div>
-      <div id="loadingWords">Loading...</div>
     </div>
 
     <script src="./popup.js" type="module"></script>

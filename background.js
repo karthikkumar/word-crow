@@ -4,7 +4,10 @@ import {
   fetchRecentWordsFromSheet,
 } from "./google-sheets.js";
 import { fetchDefinition } from "./wordnik.js";
-import { storeSelectedWordLocally } from "./storage.js";
+import {
+  storeSelectedWordLocally,
+  storeFetchedWordsLocally,
+} from "./storage.js";
 
 const CONTEXT_MENU_ID = "collectWord";
 const FILE_NAME = "Word Crow";
@@ -23,26 +26,27 @@ chrome.runtime.onInstalled.addListener(() => {
   createContextMenu();
 });
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  try {
-    if (request.action === "signIn") {
-      const accessToken = await getAccessToken();
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "signIn") {
+    getAccessToken().then((accessToken) => {
       if (chrome.runtime.lastError || !accessToken) {
         console.error(chrome.runtime.lastError);
         sendResponse({ signedIn: false });
       } else {
         sendResponse({ signedIn: true });
       }
-    } else if (request.action === "fetchRecentWords") {
-      const words = await fetchRecentWordsFromSheet(
-        FILE_NAME,
-        SHEET_NAME,
-        TOP_10_RANGE
-      );
-      sendResponse({ words });
-    }
-  } catch (error) {
-    console.error(error);
+    });
+  } else if (request.action === "fetchRecentWords") {
+    fetchRecentWordsFromSheet(FILE_NAME, SHEET_NAME, TOP_10_RANGE)
+      .then((words) => {
+        if (words?.length > 0) {
+          storeFetchedWordsLocally(words);
+          sendResponse(words);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch recent words", error);
+      });
   }
   // This line is necessary to use sendResponse asynchronously
   return true;
@@ -72,7 +76,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
       const selectionText = info.selectionText;
       const selectedWord = selectionText.trim().split(" ")[0];
 
-      // get a meaning of the word from the Wordnik API through a proxy
+      // get a definition of the word from the Wordnik API through a proxy
       const { word, definition } = await fetchDefinition(selectedWord);
       // store it in the local storage before storing it in the sheet
       storeSelectedWordLocally(word, definition);
