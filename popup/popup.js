@@ -89,15 +89,22 @@ function checkAuthenticationStatus() {
   });
 }
 
-document.getElementById("signInButton").addEventListener("click", () => {
-  chrome.runtime.sendMessage({ action: "signIn" }, (response) => {
-    if (response && response.signedIn) {
-      window.close();
-    } else {
-      console.error("Failed to sign in");
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  const closeButton = document.getElementById("closeButton");
+  closeButton.addEventListener("click", () => {
+    window.close();
   });
-});
 
-// Check the authentication status when the popup is opened
-checkAuthenticationStatus();
+  document.getElementById("signInButton").addEventListener("click", () => {
+    chrome.runtime.sendMessage({ action: "signIn" }, (response) => {
+      if (response && response.signedIn) {
+        window.close();
+      } else {
+        console.error("Failed to sign in");
+      }
+    });
+  });
+
+  // Check the authentication status when the popup is opened
+  checkAuthenticationStatus();
+});

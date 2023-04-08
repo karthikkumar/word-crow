@@ -80,6 +80,35 @@ body {
   display: none;
 }
 
+#header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: max-content;
+  width: 1005;
+}
+
+#headerActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0.6rem;
+}
+
+#headerActions > button {
+  background-color: #efefef;
+  border: 0;
+  color: #484848;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: underline;
+  display: inline-block;
+}
+
 #wordListContainer {
   height: max-content;
   margin: 0 0.5rem 0.5rem 0.5rem;
@@ -137,6 +166,10 @@ h3 {
   font-weight: 500;
 }
 
+ul {
+  margin: 0;
+}
+
 li {
   display: flex;
   align-items: flex-start;
@@ -155,7 +188,7 @@ li > p {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  margin: 0 1rem 1rem 0.5rem;
+  margin: 0.5rem;
   padding: 1rem;
   background-color: #fff;
   border-radius: 0.6rem;
