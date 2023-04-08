@@ -1,15 +1,7 @@
 async function getAccessToken() {
-  return new Promise((resolve, reject) => {
-    chrome.identity.getAuthToken({ interactive: true }, (token) => {
-      const error = chrome.runtime.lastError;
-      if (error || !token) {
-        console.error(error);
-        reject(error);
-      } else {
-        resolve(token);
-      }
-    });
-  });
+  return chrome.identity
+    .getAuthToken({ interactive: true })
+    .then(({ token }) => token);
 }
 
 async function findSpreadsheetIdByName(fileName, accessToken) {
@@ -19,8 +11,12 @@ async function findSpreadsheetIdByName(fileName, accessToken) {
   )}&fields=files(id,name)&access_token=${accessToken}`;
 
   const response = await fetch(url);
-  const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error("Error searching for spreadsheet");
+  }
+
+  const data = await response.json();
   return data?.files?.length > 0 ? data.files[0].id : null;
 }
 
@@ -32,16 +28,21 @@ async function findOrCreateSheet(fileName, sheetName) {
     fileName
   )}' and mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id)&access_token=${accessToken}`;
 
-  const spreadsheetId = await fetch(searchUrl)
-    .then((response) => response.json())
+  return fetch(searchUrl)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Error searching for spreadsheet");
+      }
+      return response.json();
+    })
     .then((data) => {
-      if (data.files.length > 0) {
+      if (data.files?.length > 0) {
         // Spreadsheet found, return the ID
         return data.files[0].id;
       } else {
         // Spreadsheet not found, create a new one
         const createUrl = `https://sheets.googleapis.com/v4/spreadsheets?access_token=${token}`;
-        fetch(createUrl, {
+        return fetch(createUrl, {
           method: "POST",
           body: JSON.stringify({
             properties: {
@@ -59,21 +60,15 @@ async function findOrCreateSheet(fileName, sheetName) {
             "Content-Type": "application/json",
           },
         })
-          .then((response) => response.json())
-          .then((newSheet) => {
-            // Return the ID of the newly created spreadsheet
-            return newSheet.spreadsheetId;
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Error creating spreadsheet");
+            }
+            return response.json();
           })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
+          .then((newSheet) => newSheet.spreadsheetId);
       }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
     });
-
-  return spreadsheetId;
 }
 
 async function fetchDataFromSheet(
@@ -108,8 +103,7 @@ async function findSheetId(spreadsheetId, sheetName, accessToken) {
       } else {
         throw new Error("Sheet not found");
       }
-    })
-    .catch((error) => console.error("Error:", error));
+    });
 }
 
 async function insertRow(spreadsheetId, sheetName, accessToken) {
@@ -170,44 +164,24 @@ async function updateTopRow(spreadsheetId, sheetName, values, accessToken) {
 }
 
 async function storeSelectedWordInSheet(fileName, sheetName, word, definition) {
-  try {
-    const accessToken = await getAccessToken();
-    const spreadsheetId = await findOrCreateSheet(fileName, sheetName);
-    await insertRow(spreadsheetId, sheetName, accessToken);
-    await updateTopRow(
-      spreadsheetId,
-      sheetName,
-      [word, definition],
-      accessToken
-    );
-
-    // TODO: display CAW on the extension icon
-  } catch (error) {
-    console.error("Error:", error);
-    // TODO: display ERR on the extension icon
-  }
+  const accessToken = await getAccessToken();
+  const spreadsheetId = await findOrCreateSheet(fileName, sheetName);
+  await insertRow(spreadsheetId, sheetName, accessToken);
+  await updateTopRow(spreadsheetId, sheetName, [word, definition], accessToken);
 }
 
 async function fetchRecentWordsFromSheet(fileName, sheetName, range) {
-  const accessToken = await chrome.identity
-    .getAuthToken({ interactive: true })
-    .then(({ token }) => token)
-    .catch((error) => {
-      console.error("Error fetching access token: ", error);
-    });
-
-  if (accessToken) {
-    const spreadsheetId = await findSpreadsheetIdByName(fileName, accessToken);
-    if (spreadsheetId) {
-      const words = await fetchDataFromSheet(
-        spreadsheetId,
-        sheetName,
-        range,
-        accessToken
-      );
-      return words;
-    }
+  const accessToken = await getAccessToken();
+  const spreadsheetId = await findSpreadsheetIdByName(fileName, accessToken);
+  if (spreadsheetId) {
+    const words = await fetchDataFromSheet(
+      spreadsheetId,
+      sheetName,
+      range,
+      accessToken
+    );
+    return words;
   }
 }
 
-export { storeSelectedWordInSheet, fetchRecentWordsFromSheet };
+export { getAccessToken, storeSelectedWordInSheet, fetchRecentWordsFromSheet };

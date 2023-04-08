@@ -1,4 +1,5 @@
 import {
+  getAccessToken,
   storeSelectedWordInSheet,
   fetchRecentWordsFromSheet,
 } from "./google-sheets.js";
@@ -22,42 +23,46 @@ chrome.runtime.onInstalled.addListener(() => {
   createContextMenu();
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "signIn") {
-    chrome.identity.getAuthToken({ interactive: true }, (token) => {
-      if (chrome.runtime.lastError || !token) {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  try {
+    if (request.action === "signIn") {
+      const accessToken = await getAccessToken();
+      if (chrome.runtime.lastError || !accessToken) {
         console.error(chrome.runtime.lastError);
         sendResponse({ signedIn: false });
       } else {
         sendResponse({ signedIn: true });
       }
-    });
-
-    // This line is necessary to use sendResponse asynchronously
-    return true;
+    } else if (request.action === "fetchRecentWords") {
+      const words = await fetchRecentWordsFromSheet(
+        FILE_NAME,
+        SHEET_NAME,
+        TOP_10_RANGE
+      );
+      sendResponse({ words });
+    }
+  } catch (error) {
+    console.error(error);
   }
-
-  if (request.action === "fetchRecentWords") {
-    fetchRecentWordsFromSheet(FILE_NAME, SHEET_NAME, TOP_10_RANGE).then(
-      (words) => {
-        sendResponse({ words });
-      }
-    );
-
-    // This line is necessary to use sendResponse asynchronously
-    return true;
-  }
+  // This line is necessary to use sendResponse asynchronously
+  return true;
 });
 
 chrome.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId === CONTEXT_MENU_ID) {
-    const selectionText = info.selectionText;
-    const selectedWord = selectionText.trim().split(" ")[0];
+    try {
+      const selectionText = info.selectionText;
+      const selectedWord = selectionText.trim().split(" ")[0];
 
-    // get a meaning of the word from the Wordnik API through a proxy
-    const { word, definition } = await fetchDefinition(selectedWord);
-    // store it in the local storage before storing it in the sheet
-    storeSelectedWordLocally(word, definition);
-    storeSelectedWordInSheet(FILE_NAME, SHEET_NAME, word, definition);
+      // get a meaning of the word from the Wordnik API through a proxy
+      const { word, definition } = await fetchDefinition(selectedWord);
+      // store it in the local storage before storing it in the sheet
+      storeSelectedWordLocally(word, definition);
+      await storeSelectedWordInSheet(FILE_NAME, SHEET_NAME, word, definition);
+      // TODO: display CAW on the extension icon
+    } catch (error) {
+      console.error(error);
+      // TODO: display ERR on the extension icon
+    }
   }
 });
