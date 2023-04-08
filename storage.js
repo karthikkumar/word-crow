@@ -12,9 +12,27 @@ function storeSelectedWordLocally(word, definition) {
 }
 
 function storeFetchedWordsLocally(words) {
-  if (words.length > 10) {
-    chrome.storage.local.set({ words: [...words].splice(10) });
+  if (words.length > 0) {
+    const latestWords = words.map(([word, definition]) => ({
+      word,
+      definition,
+    }));
+    latestWords.splice(10);
+    chrome.storage.local.set({ words: latestWords });
   }
 }
 
-export { storeSelectedWordLocally, storeFetchedWordsLocally };
+function deleteAWordLocally(index) {
+  const key = "words";
+  chrome.storage.local.get(key, (result) => {
+    const words = result[key] || [];
+    words.splice(index, 1);
+    chrome.storage.local.set({ words });
+  });
+}
+
+export {
+  storeSelectedWordLocally,
+  storeFetchedWordsLocally,
+  deleteAWordLocally,
+};

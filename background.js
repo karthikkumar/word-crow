@@ -2,11 +2,13 @@ import {
   getAccessToken,
   storeSelectedWordInSheet,
   fetchRecentWordsFromSheet,
+  deleteAWord,
 } from "./google-sheets.js";
 import { fetchDefinition } from "./wordnik.js";
 import {
   storeSelectedWordLocally,
   storeFetchedWordsLocally,
+  deleteAWordLocally,
 } from "./storage.js";
 
 const CONTEXT_MENU_ID = "collectWord";
@@ -47,7 +49,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch((error) => {
         console.error("Failed to fetch recent words", error);
       });
+  } else if (request.action === "deleteWord") {
+    const { word, index } = request;
+    deleteAWord(FILE_NAME, SHEET_NAME, word, index)
+      .then(() => {
+        deleteAWordLocally(index - 1);
+        sendResponse({ deleted: true });
+      })
+      .catch((error) => {
+        sendResponse({ deleted: false });
+        console.error("Failed to delete a word", error);
+      });
   }
+
   // This line is necessary to use sendResponse asynchronously
   return true;
 });

@@ -184,4 +184,56 @@ async function fetchRecentWordsFromSheet(fileName, sheetName, range) {
   }
 }
 
-export { getAccessToken, storeSelectedWordInSheet, fetchRecentWordsFromSheet };
+async function deleteAWord(fileName, sheetName, word, rowIndex) {
+  const range = "A" + rowIndex;
+  const words = await fetchRecentWordsFromSheet(fileName, sheetName, range);
+
+  // ensure the word is the same as the one we want to delete
+  if (words.length > 0 && words[0][0] !== word) {
+    return;
+  }
+
+  const accessToken = await getAccessToken();
+  const spreadsheetId = await findSpreadsheetIdByName(fileName, accessToken);
+  const sheetId = await findSheetId(spreadsheetId, sheetName, accessToken);
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+
+  const body = {
+    requests: [
+      {
+        deleteDimension: {
+          range: {
+            sheetId: sheetId,
+            dimension: "ROWS",
+            startIndex: rowIndex - 1,
+            endIndex: rowIndex,
+          },
+        },
+      },
+    ],
+  };
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(
+        `Error deleting row in Google Sheet: ${response.statusText}`
+      );
+    }
+    return response.json();
+  });
+}
+
+export {
+  getAccessToken,
+  storeSelectedWordInSheet,
+  fetchRecentWordsFromSheet,
+  deleteAWord,
+};

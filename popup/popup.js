@@ -32,7 +32,8 @@ function showWords(words) {
 
   const template = document.getElementById("wordTemplate");
   let word, definition;
-  for (const item of words) {
+  for (const index in words) {
+    const item = words[index];
     if (Array.isArray(item)) {
       [word, definition] = item;
     } else {
@@ -42,6 +43,29 @@ function showWords(words) {
     const listItem = template.content.firstElementChild.cloneNode(true);
     listItem.querySelector(".word").textContent = word;
     listItem.querySelector(".definition").textContent = definition;
+
+    const rowWord = word;
+    const rowIndex = parseInt(index) + 1;
+    const deleteButton = listItem.querySelector(".deleteButton");
+    deleteButton.addEventListener("click", () => {
+      listItem.style.opacity = 0.5;
+      deleteButton.style.visibility = "hidden";
+
+      chrome.runtime.sendMessage(
+        { action: "deleteWord", word: rowWord, index: rowIndex },
+        ({ deleted }) => {
+          if (deleted) {
+            listItem.remove();
+            if (wordList.children.length === 0) {
+              wordListContainer.style.display = "none";
+            }
+          } else {
+            listItem.style.opacity = 1;
+            deleteButton.style.visibility = "visible";
+          }
+        }
+      );
+    });
     wordList.appendChild(listItem);
   }
 
