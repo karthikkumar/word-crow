@@ -48,6 +48,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   return true;
 });
 
+function clearBadge() {
+  setTimeout(() => {
+    chrome.action.setBadgeText({ text: "" });
+  }, 3000);
+}
+
+function showSuccessBadge() {
+  chrome.action.setBadgeText({ text: "CAW" });
+  chrome.action.setBadgeBackgroundColor({ color: "green" });
+  clearBadge();
+}
+
+function showErrorBadge() {
+  chrome.action.setBadgeText({ text: "ERR" });
+  chrome.action.setBadgeBackgroundColor({ color: "red" });
+  clearBadge();
+}
+
 chrome.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId === CONTEXT_MENU_ID) {
     try {
@@ -59,10 +77,12 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
       // store it in the local storage before storing it in the sheet
       storeSelectedWordLocally(word, definition);
       await storeSelectedWordInSheet(FILE_NAME, SHEET_NAME, word, definition);
-      // TODO: display CAW on the extension icon
+      // display CAW on the extension icon on success
+      showSuccessBadge();
     } catch (error) {
+      // display ERR on the extension icon on failure
+      showErrorBadge();
       console.error(error);
-      // TODO: display ERR on the extension icon
     }
   }
 });
