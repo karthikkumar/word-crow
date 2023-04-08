@@ -1,9 +1,9 @@
-function storeSelectedWordLocally(word, meaning) {
+function storeSelectedWordLocally(word, definition) {
   const key = "words";
   chrome.storage.local.get(key, (result) => {
     const words = result[key] || [];
     const updatedWords = [...words];
-    updatedWords.unshift({ word, meaning });
+    updatedWords.unshift({ word, definition });
     if (updatedWords.length > 10) {
       updatedWords.splice(10);
     }

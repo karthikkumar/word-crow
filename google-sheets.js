@@ -146,7 +146,7 @@ async function fetchDataFromSheet(
 //   return response.json();
 // }
 
-async function storeSelectedWordInSheet(fileName, sheetName, word, meaning) {
+async function storeSelectedWordInSheet(fileName, sheetName, word, definition) {
   try {
     const accessToken = await getAccessToken();
     const spreadsheetId = await findOrCreateSheet(fileName, sheetName);
@@ -157,7 +157,7 @@ async function storeSelectedWordInSheet(fileName, sheetName, word, meaning) {
     const success = await fetch(url, {
       method: "POST",
       body: JSON.stringify({
-        values: [[word, meaning]],
+        values: [[word, definition]],
       }),
       headers: {
         "Content-Type": "application/json",

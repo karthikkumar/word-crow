@@ -55,10 +55,9 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     const selectedWord = selectionText.trim().split(" ")[0];
 
     // get a meaning of the word from the Wordnik API through a proxy
+    const { word, definition } = await fetchDefinition(selectedWord);
     // store it in the local storage before storing it in the sheet
-    const { word, meaning = "" } = await fetchDefinition(selectedWord);
-    storeSelectedWordLocally(word, meaning);
-
-    storeSelectedWordInSheet(FILE_NAME, SHEET_NAME, word, meaning);
+    storeSelectedWordLocally(word, definition);
+    storeSelectedWordInSheet(FILE_NAME, SHEET_NAME, word, definition);
   }
 });
