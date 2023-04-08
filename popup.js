@@ -60,7 +60,7 @@ function fetchRecentWords() {
     }
   });
 
-  chrome.runtime.sendMessage({ action: "fetchRecentWords1" }, (response) => {
+  chrome.runtime.sendMessage({ action: "fetchRecentWords" }, (response) => {
     if (response?.words) {
       showWords(response.words);
     } else {
