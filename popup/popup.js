@@ -22,7 +22,7 @@ function hideLoadingWords() {
   document.getElementById("loadingWords").style.display = "none";
 }
 
-function showWords(words) {
+function showWords(words, canDelete = false) {
   if (words.length === 0) {
     return;
   }
@@ -41,6 +41,7 @@ function showWords(words) {
       definition = item.definition;
     }
     const listItem = template.content.firstElementChild.cloneNode(true);
+    listItem.style.pointerEvents = canDelete ? "auto" : "none";
     listItem.querySelector(".word").textContent = word;
     listItem.querySelector(".definition").textContent = definition;
 
@@ -49,7 +50,9 @@ function showWords(words) {
     const deleteButton = listItem.querySelector(".deleteButton");
     deleteButton.addEventListener("click", () => {
       listItem.style.opacity = 0.5;
-      deleteButton.style.visibility = "hidden";
+      wordList.childNodes.forEach((child) => {
+        child.style.pointerEvents = "none";
+      });
 
       chrome.runtime.sendMessage(
         { action: "deleteWord", word: rowWord, index: rowIndex },
@@ -61,8 +64,11 @@ function showWords(words) {
             }
           } else {
             listItem.style.opacity = 1;
-            deleteButton.style.visibility = "visible";
           }
+
+          wordList.childNodes.forEach((child) => {
+            child.style.pointerEvents = "auto";
+          });
         }
       );
     });
@@ -86,7 +92,7 @@ function fetchRecentWords() {
 
   chrome.runtime.sendMessage({ action: "fetchRecentWords" }, (words) => {
     if (words?.length > 0) {
-      showWords(words);
+      showWords(words, true);
     } else {
       console.error("Failed to fetch recent words");
     }

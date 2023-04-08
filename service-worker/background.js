@@ -9,7 +9,7 @@ import {
   storeSelectedWordLocally,
   storeFetchedWordsLocally,
   deleteAWordLocally,
-} from "./storage.js";
+} from "../utils/storage.js";
 
 const CONTEXT_MENU_ID = "collectWord";
 const FILE_NAME = "Word Crow";
