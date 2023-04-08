@@ -22,23 +22,47 @@ function hideLoadingWords() {
   document.getElementById("loadingWords").style.display = "none";
 }
 
+function showWords(words) {
+  if (words.length === 0) {
+    return;
+  }
+  const wordListContainer = document.getElementById("wordListContainer");
+  const wordList = document.getElementById("wordList");
+  wordList.innerHTML = "";
+
+  const template = document.getElementById("wordTemplate");
+  let word, meaning;
+  for (const item of words) {
+    if (Array.isArray(item)) {
+      [word, meaning] = item;
+    } else {
+      word = item.word;
+      meaning = item.meaning;
+    }
+    const listItem = template.content.firstElementChild.cloneNode(true);
+    listItem.querySelector(".word").textContent = word;
+    listItem.querySelector(".meaning").textContent = meaning;
+    wordList.appendChild(listItem);
+  }
+
+  wordListContainer.style.display = "block";
+}
+
 function fetchRecentWords() {
   showLoadingWords();
-  chrome.runtime.sendMessage({ action: "fetchRecentWords" }, (response) => {
+
+  // show recent words from local storage until the recent words are fetched from the sheet
+  const key = "words";
+  chrome.storage.local.get(key, (result) => {
+    const words = result[key];
+    if (words?.length > 0) {
+      showWords(words);
+    }
+  });
+
+  chrome.runtime.sendMessage({ action: "fetchRecentWords1" }, (response) => {
     if (response?.words) {
-      const wordListContainer = document.getElementById("wordListContainer");
-      const wordList = document.getElementById("wordList");
-      wordList.innerHTML = "";
-
-      const template = document.getElementById("wordTemplate");
-      for (const word of response.words) {
-        const listItem = template.content.firstElementChild.cloneNode(true);
-        listItem.querySelector(".word").textContent = word;
-        listItem.querySelector(".meaning").textContent = "meaning";
-        wordList.appendChild(listItem);
-      }
-
-      wordListContainer.style.display = "block";
+      showWords(response.words);
     } else {
       console.error("Failed to fetch recent words");
     }
@@ -68,7 +92,6 @@ function checkAuthenticationStatus() {
 
 document.getElementById("signInButton").addEventListener("click", () => {
   chrome.runtime.sendMessage({ action: "signIn" }, (response) => {
-    console.log(response);
     if (response && response.signedIn) {
       window.close();
     } else {

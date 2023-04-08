@@ -9,7 +9,7 @@
     "48": "images/icon-48.png",
     "128": "images/icon-128.png"
   },
-  "permissions": ["contextMenus", "identity"],
+  "permissions": ["contextMenus", "identity", "storage"],
   "host_permissions": ["*://*/*"],
   "oauth2": {
     "client_id": "746031622480-rj65ndu3bjlsg1prgh9ta94ghi3qjdaq.apps.googleusercontent.com",

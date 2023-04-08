@@ -1,7 +1,7 @@
 // const SPREADSHEET_ID = "1s7yof0W_O0d5Hec6EoNxvu8MrscrjNaXVdX67eNOwXw";
 const FILE_NAME = "Word Crow";
 const SHEET_NAME = "List";
-const TOP_10_RANGE = "A1:A10";
+const TOP_10_RANGE = "A1:B10";
 const CONTEXT_MENU_ID = "collectWord";
 
 chrome.contextMenus.create({
@@ -35,11 +35,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-async function fetchData(spreadsheetId, sheetName, range, accessToken) {
+function storeSelectedWordLocally(word, meaning) {
+  const key = "words";
+  chrome.storage.local.get(key, (result) => {
+    const words = result[key] || [];
+    const updatedWords = [...words];
+    updatedWords.unshift({ word, meaning });
+    if (updatedWords.length > 10) {
+      updatedWords.splice(10);
+    }
+    chrome.storage.local.set({ words: updatedWords });
+  });
+}
+
+async function fetchDataFromSheet(
+  spreadsheetId,
+  sheetName,
+  range,
+  accessToken
+) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?access_token=${accessToken}`;
   const response = await fetch(url);
   const data = await response.json();
-  return data?.values?.length > 0 ? data.values.flat() : [];
+  return data?.values?.length > 0 ? data.values : [];
 }
 
 async function findSpreadsheetIdByName(fileName, accessToken) {
@@ -65,7 +83,7 @@ async function fetchRecentWordsFromSheet() {
   if (accessToken) {
     const spreadsheetId = await findSpreadsheetIdByName(FILE_NAME, accessToken);
     if (spreadsheetId) {
-      const words = await fetchData(
+      const words = await fetchDataFromSheet(
         spreadsheetId,
         SHEET_NAME,
         TOP_10_RANGE,
@@ -93,7 +111,6 @@ function findOrCreateSheet(callback) {
         if (data.files.length > 0) {
           // Spreadsheet found, return the ID
           callback(data.files[0].id);
-          console.log("Spreadsheet found, ID: " + data.files[0].id);
         } else {
           // Spreadsheet not found, create a new one
           const createUrl = `https://sheets.googleapis.com/v4/spreadsheets?access_token=${token}`;
@@ -119,7 +136,6 @@ function findOrCreateSheet(callback) {
             .then((newSheet) => {
               // Return the ID of the newly created spreadsheet
               callback(newSheet.spreadsheetId);
-              console.log("Spreadsheet created, ID: " + newSheet.spreadsheetId);
             })
             .catch((error) => {
               console.error("Error:", error);
@@ -132,7 +148,7 @@ function findOrCreateSheet(callback) {
   });
 }
 
-function storeSelectedWordInSheet(spreadsheetId, selectedWord) {
+function storeSelectedWordInSheet(spreadsheetId, word, meaning) {
   chrome.identity.getAuthToken({ interactive: true }, (token) => {
     if (chrome.runtime.lastError) {
       console.error(chrome.runtime.lastError);
@@ -140,14 +156,13 @@ function storeSelectedWordInSheet(spreadsheetId, selectedWord) {
     }
 
     const sheetsApi = "https://sheets.googleapis.com/v4/spreadsheets";
-    const range = encodeURIComponent(`${SHEET_NAME}!A:A`);
+    const range = encodeURIComponent(`${SHEET_NAME}!A:B`);
     const url = `${sheetsApi}/${spreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&access_token=${token}`;
 
     fetch(url, {
       method: "POST",
       body: JSON.stringify({
-        range: `${SHEET_NAME}!A:A`,
-        values: [[selectedWord]],
+        values: [[word, meaning]],
       }),
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +170,7 @@ function storeSelectedWordInSheet(spreadsheetId, selectedWord) {
     })
       .then((response) => {
         if (response.ok) {
-          console.log("Selected word stored in Google Sheet");
+          // TODO: display CAW on the extension icon
         } else {
           console.error("Failed to store the selected word");
         }
@@ -166,14 +181,35 @@ function storeSelectedWordInSheet(spreadsheetId, selectedWord) {
   });
 }
 
-chrome.contextMenus.onClicked.addListener((info) => {
+async function fetchMeaning(word) {
+  const url = `https://wordnik-proxy-cjsf2syxhq-em.a.run.app/word.json/${word}/definitions?limit=1&includeRelated=false&useCanonical=false&includeTags=false`;
+  const result = await fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.length > 0) {
+        return { word, meaning: data[0].text };
+      } else {
+        return { word };
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+    });
+  return result || { word };
+}
+
+chrome.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId === CONTEXT_MENU_ID) {
     const selectionText = info.selectionText;
-    const word = selectionText.trim().split(" ")[0];
-    console.log({ selectionText, word });
+    const selectedWord = selectionText.trim().split(" ")[0];
+
+    // get a meaning of the word from the Wordnik API through a proxy
+    // store it in the local storage before storing it in the sheet
+    const { word, meaning = "" } = await fetchMeaning(selectedWord);
+    storeSelectedWordLocally(word, meaning);
 
     findOrCreateSheet((spreadsheetId) => {
-      storeSelectedWordInSheet(spreadsheetId, word);
+      storeSelectedWordInSheet(spreadsheetId, word, meaning);
     });
   }
 });
