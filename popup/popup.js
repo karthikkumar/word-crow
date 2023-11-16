@@ -120,8 +120,11 @@ function checkAuthenticationStatus() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const closeButton = document.getElementById("closeButton");
-  closeButton.addEventListener("click", () => {
+  document.getElementById("settingsButton").addEventListener("click", () => {
+    chrome.runtime.openOptionsPage();
+  });
+
+  document.getElementById("closeButton").addEventListener("click", () => {
     window.close();
   });
 

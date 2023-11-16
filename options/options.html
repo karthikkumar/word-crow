@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="../images/icon-16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="../images/icon-32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../images/icon-48.png"
+    />
+    <link rel="stylesheet" href="./options.css" />
+    <title>Word Crow - Settings</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Settings</h1>
+      <div class="options">
+        <div id="spinner">
+          <div class="spinnerContainer">
+            <div class="spinnerText">
+              <span class="caw">caw</span>
+              <span class="caw">caw</span>
+              <!-- <span class="caw">caw</span> -->
+            </div>
+            <img src="../images/crow-64.png" alt="crow" />
+          </div>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__account">Account</label>
+          <button id="word-crow-options__signin">Sign in with Google</button>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__list">Set default list</label>
+          <div>
+            <select id="word-crow-options__list">
+              <option value="1">List 1</option>
+              <option value="2">List 2</option>
+              <option value="3">List 3</option>
+            </select>
+            <button>Save</button>
+          </div>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__new_list">Create new list</label>
+          <div>
+            <input type="text" id="word-crow-options__new_list" />
+            <button id="word-crow-options__new_list__submit">Create</button>
+          </div>
+        </div>
+        <div>
+          <label for="word-crow-options__clear_words"
+            >Clear the default list</label
+          >
+          <button id="word-crow-options__clear_words">Clear all words</button>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__delete_list">Delete list</label>
+          <div>
+            <select id="word-crow-options__delete_list">
+              <option value="all">All</option>
+              <option value="1">List 1</option>
+              <option value="2">List 2</option>
+              <option value="3">List 3</option>
+            </select>
+            <button>Delete</button>
+          </div>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__preview_last">Preview last</label>
+          <div>
+            <input type="number" id="word-crow-options__preview_last" />
+            <span>words</span>
+          </div>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__allow_duplicate"
+            >Allow duplicate words</label
+          >
+          <input type="checkbox" id="word-crow-options__allow_duplicate" />
+        </div>
+        <div class="option">
+          <label for="word-crow-options__sound"
+            >Sound when a word collected</label
+          >
+          <radio-group id="word-crow-options__sound">
+            <radio-button name="sound" value="caw">CAW</radio-button>
+            <radio-button name="sound" value="off">Off</radio-button>
+          </radio-group>
+        </div>
+        <div class="option">
+          <label for="word-crow-options__dark_mode">Dark mode</label>
+          <input type="checkbox" id="word-crow-options__dark_mode" />
+        </div>
+        <div class="option">
+          <label for="word-crow-options__feedback">Contact developer</label>
+          <button id="word-crow-options__feedback">Email</button>
+        </div>
+      </div>
+      <img class="logo" src="../images/logo.png" alt="Word Crow" />
+    </div>
+    <script src="./options.js" type="module"></script>
+  </body>
+</html>

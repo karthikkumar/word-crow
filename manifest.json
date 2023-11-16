@@ -15,7 +15,9 @@
     "client_id": "746031622480-rj65ndu3bjlsg1prgh9ta94ghi3qjdaq.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/spreadsheets",
-      "https://www.googleapis.com/auth/drive.file"
+      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email"
     ]
   },
   "background": {
@@ -30,5 +32,9 @@
       "48": "images/icon-48.png",
       "128": "images/icon-128.png"
     }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
   }
 }
